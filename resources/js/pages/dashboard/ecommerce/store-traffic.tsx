@@ -239,7 +239,6 @@ export function StoreTraffic() {
                         <ChartLegend
                             align="right"
                             verticalAlign="top"
-                            className="justify-end"
                             content={<ChartLegendContent />}
                         />
                         {/* recharts 3.10 Legend typing quirk */}

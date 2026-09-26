@@ -76,7 +76,7 @@ export default function DashboardLayout({
                             <Button asChild size="icon">
                                 <Link
                                     prefetch={false}
-                                    href="https://github.com/arhamkhnz/next-shadcn-admin-dashboard"
+                                    href="https://github.com/gilangprtm/laravel-shadcn-admin-dashboard"
                                     target="_blank"
                                     rel="noreferrer"
                                     aria-label="Open GitHub repository"

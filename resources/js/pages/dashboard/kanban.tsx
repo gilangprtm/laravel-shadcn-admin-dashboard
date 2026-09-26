@@ -64,8 +64,12 @@ interface KanbanProps {
     initialBoard?: BoardState;
 }
 
-export default function Kanban({ initialBoard: initialBoardProp }: KanbanProps) {
-    const [board, setBoard] = React.useState<BoardState>(initialBoardProp ?? initialBoard);
+export default function Kanban({
+    initialBoard: initialBoardProp,
+}: KanbanProps) {
+    const [board, setBoard] = React.useState<BoardState>(
+        initialBoardProp ?? initialBoard,
+    );
     const [columnOrder, setColumnOrder] = React.useState<ColumnId[]>(columnIds);
     const [activeTask, setActiveTask] = React.useState<Task | null>(null);
     const [activeColumnId, setActiveColumnId] = React.useState<ColumnId | null>(

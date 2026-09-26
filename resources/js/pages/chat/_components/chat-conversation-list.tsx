@@ -111,7 +111,7 @@ export function ChatConversationList({
             <div className="flex min-h-0 flex-1 flex-col">
                 <ScrollArea
                     type="hover"
-                    className="**:data-[slot=scroll-area-viewport]:scroll-fade h-full min-h-0 flex-1 overflow-hidden [&_[data-orientation=vertical][data-slot=scroll-area-scrollbar]]:w-1.5"
+                    className="h-full min-h-0 flex-1 overflow-hidden **:data-[slot=scroll-area-viewport]:scroll-fade [&_[data-orientation=vertical][data-slot=scroll-area-scrollbar]]:w-1.5"
                 >
                     <div className="flex flex-col gap-3 pt-0">
                         {conversationGroups.map(({ group, conversations }) => (

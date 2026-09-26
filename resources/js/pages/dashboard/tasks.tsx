@@ -46,8 +46,8 @@ import {
 import { cn } from '@/lib/utils';
 
 import { columns } from './tasks/columns';
-import { tasks  } from './tasks/data';
-import type {Task} from './tasks/data';
+import { tasks } from './tasks/data';
+import type { Task } from './tasks/data';
 import { TasksToolbar } from './tasks/tasks-toolbar';
 
 interface TasksProps {

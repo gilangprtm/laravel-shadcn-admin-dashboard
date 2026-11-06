@@ -202,3 +202,34 @@ Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `
 - IMPORTANT: Activate `inertia-react-development` when working with Inertia React client-side patterns.
 
 </laravel-boost-guidelines>
+
+## Panduan proyek: reuse-first frontend
+
+Bagian ini melengkapi, bukan menggantikan, aturan Laravel Boost dan instruksi proyek lainnya.
+
+### Inventaris sebelum implementasi
+
+- Sebelum membuat komponen React, hook, helper, atau formatter baru, periksa `resources/js/components/`, `resources/js/hooks/`, dan `resources/js/lib/`. Cari berdasarkan perilaku dan sinonim (misalnya konfirmasi/confirm/dialog), bukan hanya nama file yang diusulkan.
+- Baca implementasi kandidat, imports/exports, contoh halaman/consumer yang relevan di `resources/js/pages/` dan lokasi pemakai lainnya, serta tes yang sudah ada. Dalam plan/review, sebutkan file kandidat reuse dan keputusan singkat: reuse, komposisi, ekstensi kompatibel, atau baru dengan alasan.
+- Default: gunakan primitive yang ada, komposisikan shell/komponen, dan panggil helper yang tersedia. Jika kebutuhan nyata dapat dipenuhi dengan props/API opsional yang backwards-compatible, perluas implementasi tersebut; jangan membuat dialog/modal, wrapper tabel, helper tanggal/angka/mata uang/upload/query/debounce, class combiner, atau fitur ekuivalen kedua.
+
+### Peta sumber utama
+
+Gunakan import alias `@/` untuk sumber di `resources/js/`; cek kontrak aktual sebelum memakai:
+
+- **UI dan modal:** `resources/js/components/ui/` menyediakan primitive (misalnya button, input, dialog, drawer, table, select). Komposisi modal: `resources/js/components/ui/modal-shell.tsx`; konfirmasi: `resources/js/components/ui/confirmation-modal.tsx` dan `resources/js/components/ui/confirmation-provider.tsx` (`useConfirmation`).
+- **Shell halaman/tabel:** `resources/js/components/admin/secondary-page-shell.tsx` dan `resources/js/components/data-table/data-table-shell.tsx`; pendukung di direktori data-table yang sama: `data-table-toolbar.tsx`, `data-table-pagination.tsx`, `data-table-empty-state.tsx`, `data-table-row-actions.tsx`.
+- **Class, URL, mata uang:** `resources/js/lib/utils.ts` mengekspor `cn`, `toUrl`, `canonicalizeRupiahInput`, `formatCurrencyInput`, `formatRupiah`, `formatCurrency`, `getInitials`. File ini bukan tempat menumpuk semua helper; logika domain atau kelompok fungsi kohesif masuk modul yang sesuai, atau modul baru dengan alasan nyata.
+- **Tanggal/waktu:** `resources/js/lib/date-time.ts` menyediakan `getLocalTimeZone`, `localDateKey`, `formatLocalDate`, `formatLocalDateTime`; `resources/js/components/local-date-time.tsx` menyediakan `LocalDateTime` untuk rendering lokal yang hydration-safe.
+- **Formatter umum:** `resources/js/lib/formatters.ts` menyediakan `formatNumber`, `formatPercent`, `formatCompactNumber`, `formatFileSize`.
+- **Query tabel:** `resources/js/lib/table-query.ts` menyediakan helper murni `parseTableQuery` dan `buildTableQuery`.
+- **Upload/download:** `resources/js/lib/upload.ts` menyediakan `validateUploadFile` dan `downloadBlob`.
+- **Hooks:** `resources/js/hooks/use-debounced-value.ts` (`useDebouncedValue`) dan `resources/js/hooks/use-unsaved-changes-guard.ts` (`useUnsavedChangesGuard`); periksa juga hook clipboard, appearance, mobile, current URL, initials, dan flash-toast yang sudah ada di `resources/js/hooks/`.
+
+### Batas reuse dan kontrak
+
+- Komponen/helper baru hanya tepat bila kebutuhan konkret berbeda secara material dan tidak wajar dipenuhi lewat komposisi atau ekstensi kompatibel. Berikan alasan singkat, batasi API pada tanggung jawab nyata, tambahkan tes regresi perilaku bila bermakna, dan hindari abstraksi spekulatif. Jangan memaksakan komponen ke desain/domain yang jelas tidak cocok atau memigrasikan consumer yang tidak terkait tanpa permintaan.
+- Pertahankan source of truth, kontrak data/API, aksesibilitas (termasuk keyboard/focus), tema, dan konvensi desain. Ikuti pola route/form Inertia pada consumer terkait; jangan menambah state paralel yang menduplikasi sumber yang ada atau dependency yang tidak diperlukan.
+- Validasi upload di client hanya untuk UX; server tetap wajib memvalidasi upload, termasuk isinya, dan menjadi otoritas. Untuk timestamp gunakan `LocalDateTime`/helper date-time sesuai konteks; nilai date-only tetap tanggal kalender, jangan dikonversi menjadi instant yang bergeser karena zona waktu.
+- Untuk konfirmasi sebelum aksi async, gunakan `useConfirmation` dalam provider yang ada bila sesuai. Guard navigasi unsaved adalah kasus sinkron terpisah: `useUnsavedChangesGuard` bersifat opt-in pada halaman/workspace, memakai status dirty milik caller, dan menggunakan native confirm untuk navigasi Inertia yang didukung. Baca batasnya: Back/Forward tidak dapat diblokir lewat event before Inertia, prompt unload dikelola browser, dan guard bukan jaminan bebas kehilangan data; jangan menggantinya dengan modal async.
+- `useDebouncedValue` hanya menunda pembaruan nilai, bukan membatalkan request jaringan; pertahankan penanganan cancellation/race pada pemilik request bila diperlukan.

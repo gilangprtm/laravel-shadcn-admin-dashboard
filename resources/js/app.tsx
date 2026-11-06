@@ -1,7 +1,7 @@
 import { createInertiaApp } from '@inertiajs/react';
+import { ConfirmationProvider } from '@/components/ui/confirmation-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { initializeTheme } from '@/hooks/use-appearance';
 import DashboardLayout from '@/layouts/app/dashboard-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
@@ -47,7 +47,7 @@ createInertiaApp({
                 <ThemeBootScript />
                 <PreferencesStoreProvider initialValues={initialValues}>
                     <TooltipProvider delayDuration={0}>
-                        {app}
+                        <ConfirmationProvider>{app}</ConfirmationProvider>
                         <Toaster />
                     </TooltipProvider>
                 </PreferencesStoreProvider>
@@ -58,6 +58,3 @@ createInertiaApp({
         color: '#4B5563',
     },
 });
-
-// This will set light / dark mode on load...
-initializeTheme();

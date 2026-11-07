@@ -205,7 +205,7 @@ Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `
 
 ## Panduan proyek: reuse-first frontend
 
-Bagian ini melengkapi, bukan menggantikan, aturan Laravel Boost dan instruksi proyek lainnya.
+Bagian ini melengkapi, bukan menggantikan, aturan Laravel Boost dan instruksi proyek lainnya. Panduan penggunaan manusia berada di [README: pola reuse-first](README.md#adopsi-dengan-pola-reuse-first); contoh pemakaian tidak perlu diduplikasi di instruksi agen.
 
 ### Inventaris sebelum implementasi
 
@@ -213,11 +213,14 @@ Bagian ini melengkapi, bukan menggantikan, aturan Laravel Boost dan instruksi pr
 - Baca implementasi kandidat, imports/exports, contoh halaman/consumer yang relevan di `resources/js/pages/` dan lokasi pemakai lainnya, serta tes yang sudah ada. Dalam plan/review, sebutkan file kandidat reuse dan keputusan singkat: reuse, komposisi, ekstensi kompatibel, atau baru dengan alasan.
 - Default: gunakan primitive yang ada, komposisikan shell/komponen, dan panggil helper yang tersedia. Jika kebutuhan nyata dapat dipenuhi dengan props/API opsional yang backwards-compatible, perluas implementasi tersebut; jangan membuat dialog/modal, wrapper tabel, helper tanggal/angka/mata uang/upload/query/debounce, class combiner, atau fitur ekuivalen kedua.
 
+Urutan keputusan: cari → reuse → komposisi → ekstensi kompatibel → baru hanya dengan alasan kebutuhan konkret. Jangan mengikat komponen reusable ke route, data dummy, atau domain halaman demo.
+
 ### Peta sumber utama
 
 Gunakan import alias `@/` untuk sumber di `resources/js/`; cek kontrak aktual sebelum memakai:
 
 - **UI dan modal:** `resources/js/components/ui/` menyediakan primitive (misalnya button, input, dialog, drawer, table, select). Komposisi modal: `resources/js/components/ui/modal-shell.tsx`; konfirmasi: `resources/js/components/ui/confirmation-modal.tsx` dan `resources/js/components/ui/confirmation-provider.tsx` (`useConfirmation`).
+- **Field shells:** barrel publik `resources/js/components/form-inputs/index.ts` mengekspor 15 shell dan tipe props/options/mode. Implementasi: `input-shells.tsx` (native/boolean/OTP), `choice-input-shells.tsx` (group/select/slider), `combobox-input-shells.tsx` (single/multi). `form-input-frame.tsx` adalah frame private, bukan API komposisi publik. Lihat [README: Field shells](README.md#field-shells) untuk kontrak dan contoh semua shell.
 - **Shell halaman/tabel:** `resources/js/components/admin/secondary-page-shell.tsx` dan `resources/js/components/data-table/data-table-shell.tsx`; pendukung di direktori data-table yang sama: `data-table-toolbar.tsx`, `data-table-pagination.tsx`, `data-table-empty-state.tsx`, `data-table-row-actions.tsx`.
 - **Class, URL, mata uang:** `resources/js/lib/utils.ts` mengekspor `cn`, `toUrl`, `canonicalizeRupiahInput`, `formatCurrencyInput`, `formatRupiah`, `formatCurrency`, `getInitials`. File ini bukan tempat menumpuk semua helper; logika domain atau kelompok fungsi kohesif masuk modul yang sesuai, atau modul baru dengan alasan nyata.
 - **Tanggal/waktu:** `resources/js/lib/date-time.ts` menyediakan `getLocalTimeZone`, `localDateKey`, `formatLocalDate`, `formatLocalDateTime`; `resources/js/components/local-date-time.tsx` menyediakan `LocalDateTime` untuk rendering lokal yang hydration-safe.
@@ -226,9 +229,12 @@ Gunakan import alias `@/` untuk sumber di `resources/js/`; cek kontrak aktual se
 - **Upload/download:** `resources/js/lib/upload.ts` menyediakan `validateUploadFile` dan `downloadBlob`.
 - **Hooks:** `resources/js/hooks/use-debounced-value.ts` (`useDebouncedValue`) dan `resources/js/hooks/use-unsaved-changes-guard.ts` (`useUnsavedChangesGuard`); periksa juga hook clipboard, appearance, mobile, current URL, initials, dan flash-toast yang sudah ada di `resources/js/hooks/`.
 
+Contoh dan konfigurasi rinci: [komposisi halaman/modal](README.md#komposisi-halaman-dan-modal), [tabel](README.md#data-table), [helper/formatter/hooks](README.md#helper-formatter-dan-hooks), serta [checklist adopsi](README.md#checklist-adopsi-dan-batasan). README tidak menggantikan pemeriksaan source aktual.
+
 ### Batas reuse dan kontrak
 
 - Komponen/helper baru hanya tepat bila kebutuhan konkret berbeda secara material dan tidak wajar dipenuhi lewat komposisi atau ekstensi kompatibel. Berikan alasan singkat, batasi API pada tanggung jawab nyata, tambahkan tes regresi perilaku bila bermakna, dan hindari abstraksi spekulatif. Jangan memaksakan komponen ke desain/domain yang jelas tidak cocok atau memigrasikan consumer yang tidak terkait tanpa permintaan.
+- Shell input adalah satu field semantik, bukan form builder: `label` dan `mode` (`create`/`edit`/`view`) wajib. Caller memiliki nilai/callback, form/submit/request, error dan validasi server serta authorization. Jangan samakan event native dengan callback value; periksa tipe setiap shell. Checkbox boolean perlu normalisasi `next === true`, slider memakai `number[]`, pilihan group/multi memakai `string[]`, single combobox memakai `string | null` (undefined untuk uncontrolled). Opsi unik stabil dan opsi terpilih mesti tersedia; kelompok opsi hanya didukung NativeSelect/Select. Mode view/disabled bukan authorization dan native disabled tidak diserialisasi browser FormData; validasi browser/required tidak menggantikan server.
 - Pertahankan source of truth, kontrak data/API, aksesibilitas (termasuk keyboard/focus), tema, dan konvensi desain. Ikuti pola route/form Inertia pada consumer terkait; jangan menambah state paralel yang menduplikasi sumber yang ada atau dependency yang tidak diperlukan.
 - Validasi upload di client hanya untuk UX; server tetap wajib memvalidasi upload, termasuk isinya, dan menjadi otoritas. Untuk timestamp gunakan `LocalDateTime`/helper date-time sesuai konteks; nilai date-only tetap tanggal kalender, jangan dikonversi menjadi instant yang bergeser karena zona waktu.
 - Untuk konfirmasi sebelum aksi async, gunakan `useConfirmation` dalam provider yang ada bila sesuai. Guard navigasi unsaved adalah kasus sinkron terpisah: `useUnsavedChangesGuard` bersifat opt-in pada halaman/workspace, memakai status dirty milik caller, dan menggunakan native confirm untuk navigasi Inertia yang didukung. Baca batasnya: Back/Forward tidak dapat diblokir lewat event before Inertia, prompt unload dikelola browser, dan guard bukan jaminan bebas kehilangan data; jangan menggantinya dengan modal async.
